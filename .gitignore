@@ -1,0 +1,22 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+
+# Environment variables / API keys
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Python tools
+.pytest_cache/
+.mypy_cache/
+
+# Uploaded/generated files
+uploads/
