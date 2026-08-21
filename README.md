@@ -91,16 +91,3 @@ architecture.
                         |
                         v
                     FRONTEND
-RAG Pipeline
-The backend works in two main stages.
-1. Document Ingestion
-When a PDF is uploaded:
-PDF
- ↓
-PyPDF Text Extraction
- ↓
-Text Chunking
- ↓
-Embedding Generation
- ↓
-Qdrant Storage
