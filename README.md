@@ -91,6 +91,7 @@ architecture.
                         |
                         v
                     FRONTEND
+<<<<<<< Updated upstream
 ## RAG Pipeline
 The backend works in two main stages.
 1. Document Ingestion
@@ -148,3 +149,5 @@ MED-RAG/
 ├── .gitignore
 ├── README.md
 └── .git/
+=======
+>>>>>>> Stashed changes
