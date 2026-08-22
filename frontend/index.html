@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MedRAG</title>
+
+    <link rel="icon" type="logo/png" href="logo.png">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="logo">
+                <img src="logo.png" alt="MedRAG Logo">
+            </div>
+
+            <button class="new-chat" onclick="newChat()">
+                ＋ New Chat
+            </button>
+
+            <h3>Conversations</h3>
+
+            <div class="chat-list">
+
+                <div class="chat active">
+                    Symptoms of Diabetes
+                    <small>Today, 10:30 AM</small>
+                </div>
+
+                <div class="chat">
+                    Causes of Anemia
+                    <small>Today, 09:15 AM</small>
+                </div>
+
+                <div class="chat">
+                    Diabetes Management
+                    <small>Yesterday, 07:45 PM</small>
+                </div>
+
+                <div class="chat">
+                    Hypertension Overview
+                    <small>Yesterday, 06:20 PM</small>
+                </div>
+
+            </div>
+
+            <!-- DOCUMENTS -->
+            <div class="documents">
+
+                <h3>Documents</h3>
+
+                <label class="upload-box">
+
+                    <div class="upload-icon">☁</div>
+
+                    <strong>Upload PDF</strong>
+
+                    <p>or drag and drop</p>
+
+                    <small>Max 50MB</small>
+
+                    <input
+                        type="file"
+                        accept=".pdf"
+                        onchange="uploadPDF(this)"
+                        hidden
+                    >
+
+                </label>
+
+                <p class="storage">
+                    3.2 MB / 100 MB used
+                </p>
+
+                <div class="storage-bar">
+                    <div class="storage-fill"></div>
+                </div>
+
+            </div>
+
+            <!-- PROFILE -->
+            <div class="profile">
+
+                <div class="avatar">
+                    U
+                </div>
+
+                <div>
+                    <strong>User</strong>
+                    <small>student@example.com</small>
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <!-- HEADER -->
+            <header class="top">
+
+                <div>
+                    <h1>Chat with your Medical Documents</h1>
+
+                    <p>
+                        Ask questions about your medical PDFs
+                        and get answers with trusted sources.
+                    </p>
+                </div>
+
+                <button class="theme-btn" onclick="changeTheme()">
+                    ☀ Theme
+                </button>
+
+            </header>
+            <!-- EMPTY NEW CHAT -->
+
+            <section class="empty-chat" id="emptyChat">
+
+                <div class="empty-icon">
+                    <img src="logo.png" alt="MedRAG Logo">
+                </div>
+
+                <h2>Start a New Medical Chat</h2>
+
+                <p>
+                    Upload a medical PDF and ask questions
+                    based on its content.
+                </p>
+
+                <label class="empty-upload">
+
+                    <div>☁</div>
+
+                    <strong>Upload Medical PDF</strong>
+
+                    <span>
+                        PDF files up to 50MB
+                    </span>
+
+                    <input
+                        type="file"
+                        accept=".pdf"
+                        onchange="startWithPDF(this)"
+                        hidden
+                    >
+
+                </label>
+
+            </section>
+
+            <!-- DOCUMENT AREA -->
+            <section class="document-area" id="documentArea">
+
+                <div class="document-card">
+
+                    <div class="pdf-icon">
+                        PDF
+                    </div>
+
+                    <div>
+                        <h3>Diabetes_Guidelines.pdf</h3>
+
+                        <p>
+                            2.4 MB • 28 pages
+                        </p>
+                    </div>
+
+                    <span class="check">✓</span>
+
+                </div>
+
+
+                <label class="add-pdf">
+
+                    ＋ Add More PDFs
+
+                    <input
+                        type="file"
+                        accept=".pdf"
+                        onchange="uploadPDF(this)"
+                        hidden
+                    >
+
+                </label>
+
+            </section>
+
+
+            <!-- CHAT AREA -->
+            <section class="chat-area" id="chatArea">
+
+                <div id="messages"></div>
+
+                <!-- SOURCE PREVIEW -->
+                <div class="source-preview" id="sourcePreview">
+
+                    <div class="source-header">
+
+                        <strong>📖 Source Preview</strong>
+
+                        <span class="page">
+                            Page --
+                        </span>
+
+                    </div>
+
+                    <p>
+                        Upload a medical PDF to see relevant
+                        sources here.
+                    </p>
+
+                </div>
+
+
+                <!-- QUESTION BOX -->
+
+                <div class="input-area">
+
+                    <textarea
+                        id="question"
+                        placeholder="Ask a question about your medical documents..."
+                    ></textarea>
+
+                    <div class="input-bottom">
+
+                        <button onclick="attachPDF()">
+                            📎 Attach PDF
+                        </button>
+
+                        <button onclick="clearChat()">
+                            🗑 Clear Chat
+                        </button>
+
+                        <button
+                            class="send"
+                            onclick="sendQuestion()">
+                            ➤
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <p class="disclaimer">
+
+                    MedRAG can make mistakes.
+                    Please verify important medical information.
+
+                </p>
+
+            </section>
+    
+
+        </main>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
