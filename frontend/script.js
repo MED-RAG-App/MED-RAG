@@ -1,139 +1,149 @@
-// PDF UPLOAD
+// ============================================================
+// MED-RAG FRONTEND
+// ============================================================
 
-function uploadPDF(input) {
+const API_BASE_URL = "http://127.0.0.1:8000";
 
-    if (input.files.length === 0) {
+
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+
+let currentFile = null;
+let currentCitations = [];
+
+
+// ============================================================
+// UPLOAD PDF
+// ============================================================
+
+async function uploadPDF(input) {
+
+    if (!input.files || input.files.length === 0) {
         return;
     }
 
-    let file = input.files[0];
+    const file = input.files[0];
 
+    currentFile = file;
+
+    // Show document/chat areas
     document.getElementById("emptyChat").style.display = "none";
-
-    document.getElementById("documentArea").style.display = "flex";
-
-    document.getElementById("chatArea").style.display = "block";
-
-    document.querySelector(".document-card h3").innerText =
-        file.name;
-
-    // Clear old conversation
-    document.getElementById("messages").innerHTML = "";
-
-    // Reset source preview
-    document.querySelector(".page").innerText = "Page --";
-
-    document.querySelector(".source-preview p").innerHTML =
-        "Ask a question to see relevant information from " +
-        file.name + ".";
-
-}
-
-
-// NEW CHAT
-
-function newChat() {
-
-    // Hide old document and chat
-    document.getElementById("documentArea").style.display = "none";
-    document.getElementById("chatArea").style.display = "none";
-
-    // Show empty screen
-    document.getElementById("emptyChat").style.display = "flex";
-
-    // Clear question box
-    document.getElementById("question").value = "";
-
-    // Reset document name
-    document.querySelector(".document-card h3").innerText =
-        "No document uploaded";
-
-    // Clear previous chat messages
-    document.querySelector(".user-message .message").innerText = "";
-
-    document.querySelector(".answer").innerHTML =
-        "<p>Your document-based answer will appear here.</p>";
-
-    // Reset source preview
-    document.querySelector(".page").innerText = "Page --";
-
-    document.querySelector(".source-preview p").innerHTML =
-        "Upload a medical PDF to see relevant sources here.";
-
-}
-
-function startWithPDF(input) {
-
-    if (input.files.length === 0) {
-        return;
-    }
-
-    let file = input.files[0];
-
-    // Hide empty screen
-    document.getElementById("emptyChat").style.display = "none";
-
-    // Show document and chat
     document.getElementById("documentArea").style.display = "flex";
     document.getElementById("chatArea").style.display = "block";
 
-    // Show uploaded PDF name
-    document.querySelector(".document-card h3").innerText =
-        file.name;
+    // Show filename
+    const documentTitle =
+        document.querySelector(".document-card h3");
 
-    // Clear any previous messages
-    document.getElementById("messages").innerHTML = "";
-
-    // Reset source
-    document.querySelector(".page").innerText = "Page --";
-
-    document.querySelector(".source-preview p").innerHTML =
-        "Ask a question to see relevant information from " +
-        file.name + ".";
-
-}
-
-
-// CLEAR CHAT
-
-function clearChat() {
-
-    document.getElementById("messages").innerHTML = "";
-
-    document.getElementById("question").value = "";
-
-    document.querySelector(".page").innerText =
-        "Page --";
-
-    document.querySelector(".source-preview p").innerHTML =
-        "Ask a question to see relevant information from your document.";
-
-}
-
-
-// SEND QUESTION
-
-function sendQuestion() {
-
-    let question =
-        document.getElementById("question").value.trim();
-
-    if (question === "") {
-
-        alert("Please enter a question.");
-
-        return;
+    if (documentTitle) {
+        documentTitle.innerText = file.name;
     }
 
-
-    // Get message container
-    let messages =
+    // Clear previous chat
+    const messages =
         document.getElementById("messages");
 
+    if (messages) {
+        messages.innerHTML = "";
+    }
 
-    // Create user message
+    resetSourcePreview();
 
-    let userMessage =
+    // --------------------------------------------------------
+    // Upload to backend
+    // --------------------------------------------------------
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE_URL}/upload-pdf`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Unable to process the PDF."
+            );
+        }
+
+        console.log(
+            "PDF uploaded successfully:",
+            data
+        );
+
+        alert(
+            `PDF uploaded successfully!\n\n` +
+            `Pages: ${data.pages}\n` +
+            `Chunks: ${data.chunks}\n` +
+            `Stored: ${data.stored_in_qdrant}`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "UPLOAD ERROR:",
+            error
+        );
+
+        alert(
+            "Unable to process the PDF.\n\n" +
+            error.message
+        );
+    }
+}
+
+
+// ============================================================
+// START WITH PDF
+// ============================================================
+
+async function startWithPDF(input) {
+
+    await uploadPDF(input);
+}
+
+
+// ============================================================
+// SEND QUESTION
+// ============================================================
+
+async function sendQuestion() {
+
+    const questionInput =
+        document.getElementById("question");
+
+    const question =
+        questionInput.value.trim();
+
+    if (!question) {
+
+        alert(
+            "Please enter a question."
+        );
+
+        return;
+    }
+
+    const messages =
+        document.getElementById("messages");
+
+    // --------------------------------------------------------
+    // USER MESSAGE
+    // --------------------------------------------------------
+
+    const userMessage =
         document.createElement("div");
 
     userMessage.className =
@@ -141,16 +151,22 @@ function sendQuestion() {
 
     userMessage.innerHTML = `
         <div class="message">
-            ${question}
+            ${escapeHTML(question)}
         </div>
     `;
 
-    messages.appendChild(userMessage);
+    messages.appendChild(
+        userMessage
+    );
 
+    // Clear question box
+    questionInput.value = "";
 
-    // Create temporary AI response
+    // --------------------------------------------------------
+    // Loading message
+    // --------------------------------------------------------
 
-    let aiMessage =
+    const aiMessage =
         document.createElement("div");
 
     aiMessage.className =
@@ -164,67 +180,504 @@ function sendQuestion() {
         <div class="answer">
 
             <p>
-                Your document-based answer will
-                appear here after connecting
-                the RAG backend.
+                Searching your medical document...
             </p>
-
-            <div class="sources">
-
-                <span>Sources:</span>
-
-                <button onclick="showSource('Page 1')">
-                    Page 1
-                </button>
-
-            </div>
 
         </div>
     `;
 
-    messages.appendChild(aiMessage);
+    messages.appendChild(
+        aiMessage
+    );
 
-
-    // Clear input
-    document.getElementById("question").value = "";
-
-
-    // Scroll to latest message
     aiMessage.scrollIntoView({
         behavior: "smooth"
     });
 
+    // --------------------------------------------------------
+    // ASK BACKEND
+    // --------------------------------------------------------
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/ask`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        question: question
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        console.log(
+            "RAG RESPONSE:",
+            data
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Unable to get answer."
+            );
+        }
+
+        // ----------------------------------------------------
+        // Save citations
+        // ----------------------------------------------------
+
+        currentCitations =
+            data.citations || [];
+
+        console.log(
+            "CITATIONS:",
+            currentCitations
+        );
+
+        // ----------------------------------------------------
+        // Display answer
+        // ----------------------------------------------------
+
+        displayAnswer(
+            aiMessage,
+            data
+        );
+
+    } catch (error) {
+
+        console.error(
+            "ASK ERROR:",
+            error
+        );
+
+        const answer =
+            aiMessage.querySelector(
+                ".answer"
+            );
+
+        answer.innerHTML = `
+            <p>
+                Unable to connect to the MED-RAG backend.
+            </p>
+
+            <p style="font-size: 13px;">
+                Please make sure FastAPI is running on
+                ${API_BASE_URL}
+            </p>
+        `;
+    }
 }
 
 
-// ATTACH PDF
+// ============================================================
+// DISPLAY ANSWER
+// ============================================================
 
-function attachPDF() {
+function displayAnswer(
+    aiMessage,
+    data
+) {
 
-    alert(
-        "PDF attachment will be connected to the backend later."
+    const answer =
+        aiMessage.querySelector(
+            ".answer"
+        );
+
+    const answerText =
+        data.answer ||
+        "No answer was generated.";
+
+    // --------------------------------------------------------
+    // Build citation buttons
+    // --------------------------------------------------------
+
+    let citationHTML = "";
+
+    if (
+        data.citations &&
+        data.citations.length > 0
+    ) {
+
+        citationHTML = `
+            <div class="sources">
+
+                <span>
+                    Sources:
+                </span>
+
+                <div class="citation-list">
+        `;
+
+        data.citations.forEach(
+            (citation, index) => {
+
+                const page =
+                    citation.page;
+
+                const filename =
+                    citation.filename;
+
+                citationHTML += `
+                    <button
+                        class="citation-button"
+                        onclick="showCitation(${index})"
+                    >
+                        📄 Page ${page}
+                    </button>
+                `;
+            }
+        );
+
+        citationHTML += `
+                </div>
+
+            </div>
+        `;
+
+    } else {
+
+        citationHTML = `
+            <div class="sources">
+                <span>
+                    Sources: No citation available
+                </span>
+            </div>
+        `;
+    }
+
+    // --------------------------------------------------------
+    // Update answer
+    // --------------------------------------------------------
+
+    answer.innerHTML = `
+
+        <p>
+            ${escapeHTML(answerText)}
+        </p>
+
+        ${citationHTML}
+
+    `;
+
+    // --------------------------------------------------------
+    // Automatically show first citation
+    // --------------------------------------------------------
+
+    if (
+        data.citations &&
+        data.citations.length > 0
+    ) {
+
+        showCitation(0);
+    }
+}
+
+
+// ============================================================
+// SHOW CITATION
+// ============================================================
+
+function showCitation(index) {
+
+    if (
+        !currentCitations ||
+        !currentCitations[index]
+    ) {
+
+        console.warn(
+            "Citation not found:",
+            index
+        );
+
+        return;
+    }
+
+    const citation =
+        currentCitations[index];
+
+    console.log(
+        "Showing citation:",
+        citation
     );
 
+    // --------------------------------------------------------
+    // Page
+    // --------------------------------------------------------
+
+    const pageElement =
+        document.querySelector(".page");
+
+    if (pageElement) {
+
+        pageElement.innerText =
+            `Page ${citation.page}`;
+    }
+
+    // --------------------------------------------------------
+    // Source preview
+    // --------------------------------------------------------
+
+    const preview =
+        document.querySelector(
+            ".source-preview p"
+        );
+
+    if (preview) {
+
+        preview.innerHTML = `
+            <strong>
+                ${escapeHTML(
+            citation.filename
+        )}
+            </strong>
+
+            <br><br>
+
+            ${escapeHTML(
+            citation.text
+        )}
+        `;
+    }
+
+    // --------------------------------------------------------
+    // Scroll to source preview
+    // --------------------------------------------------------
+
+    const sourcePreview =
+        document.getElementById(
+            "sourcePreview"
+        );
+
+    if (sourcePreview) {
+
+        sourcePreview.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }
 }
 
 
+// ============================================================
 // SHOW SOURCE
+// ============================================================
 
 function showSource(page) {
 
-    document.querySelector(".page").innerText = page;
+    if (
+        !currentCitations ||
+        currentCitations.length === 0
+    ) {
 
-    document.getElementById("sourcePreview")
-        .scrollIntoView({
-            behavior: "smooth"
-        });
+        return;
+    }
 
+    const index =
+        currentCitations.findIndex(
+            citation =>
+                `Page ${citation.page}` === page
+        );
+
+    if (index !== -1) {
+
+        showCitation(index);
+    }
 }
 
 
+// ============================================================
+// RESET SOURCE PREVIEW
+// ============================================================
+
+function resetSourcePreview() {
+
+    const pageElement =
+        document.querySelector(".page");
+
+    if (pageElement) {
+
+        pageElement.innerText =
+            "Page --";
+    }
+
+    const preview =
+        document.querySelector(
+            ".source-preview p"
+        );
+
+    if (preview) {
+
+        preview.innerHTML =
+            "Ask a question to see relevant information from the uploaded document.";
+    }
+
+    currentCitations = [];
+}
+
+
+// ============================================================
+// CLEAR CHAT
+// ============================================================
+
+function clearChat() {
+
+    const messages =
+        document.getElementById(
+            "messages"
+        );
+
+    if (messages) {
+
+        messages.innerHTML = "";
+    }
+
+    const question =
+        document.getElementById(
+            "question"
+        );
+
+    if (question) {
+
+        question.value = "";
+    }
+
+    resetSourcePreview();
+}
+
+
+// ============================================================
+// NEW CHAT
+// ============================================================
+
+function newChat() {
+
+    document.getElementById(
+        "documentArea"
+    ).style.display = "none";
+
+    document.getElementById(
+        "chatArea"
+    ).style.display = "none";
+
+    document.getElementById(
+        "emptyChat"
+    ).style.display = "flex";
+
+    const question =
+        document.getElementById(
+            "question"
+        );
+
+    if (question) {
+
+        question.value = "";
+    }
+
+    const title =
+        document.querySelector(
+            ".document-card h3"
+        );
+
+    if (title) {
+
+        title.innerText =
+            "No document uploaded";
+    }
+
+    const messages =
+        document.getElementById(
+            "messages"
+        );
+
+    if (messages) {
+
+        messages.innerHTML = "";
+    }
+
+    resetSourcePreview();
+
+    currentFile = null;
+}
+
+
+// ============================================================
+// ATTACH PDF
+// ============================================================
+
+function attachPDF() {
+
+    const fileInput =
+        document.querySelector(
+            'input[type="file"]'
+        );
+
+    if (fileInput) {
+
+        fileInput.click();
+
+    } else {
+
+        alert(
+            "PDF upload input not found."
+        );
+    }
+}
+
+
+// ============================================================
 // THEME
+// ============================================================
 
 function changeTheme() {
-    document.body.classList.toggle("dark");
+
+    document.body.classList.toggle(
+        "dark"
+    );
 }
 
+
+// ============================================================
+// HTML ESCAPE
+// ============================================================
+
+function escapeHTML(value) {
+
+    if (value === null ||
+        value === undefined) {
+
+        return "";
+    }
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
