@@ -1,0 +1,35 @@
+MED-RAG FIXED VERSION
+
+Replace these files in your project:
+- backend/main.py
+- backend/pdf_processor.py
+- backend/rag_pipeline.py
+- frontend/index.html
+- frontend/style.css
+- frontend/script.js
+
+IMPORTANT:
+- DO NOT replace backend/.env. Keep your existing QDRANT and GEMINI keys.
+- Keep frontend/logo.png.
+- Keep your existing requirements.txt.
+
+After replacing:
+1. Save all files.
+2. Restart backend:
+   uvicorn main:app --reload
+3. Refresh the frontend with Ctrl+Shift+R.
+
+This version:
+- keeps only Recent Chats scrollable in the sidebar
+- keeps the main chat readable with a dedicated chat scroll area
+- keeps the composer at the bottom
+- accepts PDF, PNG, JPG and WEBP
+- sends uploads to the real backend
+- filters answers to the documents currently open in the chat
+- stores page numbers with RAG chunks
+- opens a source page in a preview modal
+- supports PDF/image source preview
+- shows suggestions only while typing
+- includes Share
+- removes the old fake frontend answer
+- improves OCR preprocessing for handwritten/scanned documents

@@ -1,0 +1,291 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedRAG</title>
+    <link rel="icon" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <img src="logo.png" alt="MedRAG">
+            <div>
+                <strong>Med<span>RAG</span></strong>
+                <small>Medical Document Assistant</small>
+            </div>
+        </div>
+
+        <button class="new-chat" onclick="newChat()">
+            ＋ New chat
+        </button>
+
+        <div class="recent-title">
+            <span>Recent chats</span>
+            <button onclick="clearHistory()">Clear</button>
+        </div>
+
+        <div class="chat-list" id="chatList"></div>
+
+        <div class="sidebar-bottom">
+            <div class="mini-help">
+                <b>MedRAG</b>
+                <span>Upload documents and ask questions.</span>
+            </div>
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div>
+                <div class="eyebrow">
+                    ✦ AI MEDICAL DOCUMENT ASSISTANT
+                </div>
+
+                <h1>
+                    Your medical documents,
+                    <span>simplified.</span>
+                </h1>
+
+                <p>
+                    Upload one or multiple medical documents and ask questions naturally.
+                </p>
+            </div>
+
+            <div class="top-actions">
+
+                <div class="status">
+                    <i></i>
+                    System online
+                </div>
+
+                <button
+                    class="icon-btn"
+                    onclick="shareChat()"
+                    title="Share">
+                    ↗
+                </button>
+
+                <button
+                    class="icon-btn"
+                    onclick="changeTheme()"
+                    title="Theme">
+                    ☼
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <section class="workspace">
+
+            <div class="upload-row">
+
+                <label class="upload-card">
+
+                    <input
+                        id="fileInput"
+                        type="file"
+                        multiple
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        onchange="handleFiles(this.files)"
+                        hidden>
+
+                    <div class="upload-icon">
+                        ↑
+                    </div>
+
+                    <b>
+                        Upload medical documents
+                    </b>
+
+                    <span>
+                        Select one or multiple PDF/images
+                    </span>
+
+                    <em>
+                        Choose files
+                    </em>
+
+                    <small>
+                        Maximum 50 MB per file
+                    </small>
+
+                </label>
+
+
+                <div class="documents-card">
+
+                    <div class="card-title">
+
+                        <b>
+                            Current documents
+                        </b>
+
+                        <span id="documentCount">
+                            0
+                        </span>
+
+                    </div>
+
+                    <div id="documents"></div>
+
+                </div>
+
+            </div>
+
+
+            <div class="chat-shell">
+
+                <div
+                    class="chat-scroll"
+                    id="chatScroll">
+
+                    <div
+                        id="welcome"
+                        class="welcome">
+
+                        <img
+                            src="logo.png"
+                            alt="MedRAG">
+
+                        <h2>
+                            Ask anything about your documents
+                        </h2>
+
+                        <p>
+                            Upload your medical documents and start asking questions.
+                        </p>
+
+                    </div>
+
+                    <div id="messages"></div>
+
+                </div>
+
+
+                <div class="composer-wrap">
+
+                    <div
+                        id="suggestions"
+                        class="suggestions">
+                    </div>
+
+
+                    <div class="composer">
+
+                        <button
+                            class="attach-btn"
+                            onclick="openFilePicker()"
+                            title="Add documents">
+                            ＋
+                        </button>
+
+                        <textarea
+                            id="question"
+                            rows="1"
+                            placeholder="Ask a question about your documents..."
+                            oninput="handleTyping()"
+                            onkeydown="handleEnter(event)">
+                        </textarea>
+
+                        <button
+                            class="send-btn"
+                            onclick="sendQuestion()"
+                            title="Send">
+                            ➤
+                        </button>
+
+                    </div>
+
+
+                    <div class="composer-footer">
+
+                        <span>
+                            Answers are based on your uploaded documents.
+                        </span>
+
+                        <button onclick="clearCurrentChat()">
+                            Clear chat
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- SOURCE MODAL -->
+
+<div
+    class="modal"
+    id="sourceModal"
+    onclick="closeSource(event)">
+
+    <div class="source-modal">
+
+        <button
+            class="modal-close"
+            onclick="closeSource()">
+            ×
+        </button>
+
+        <div class="modal-head">
+
+            <div>
+
+                <b id="sourceTitle">
+                    Source
+                </b>
+
+                <span id="sourcePage">
+                    Page 1
+                </span>
+
+            </div>
+
+        </div>
+
+        <div
+            class="preview"
+            id="preview">
+        </div>
+
+        <div class="extracted">
+
+            <b>
+                Text found on this page
+            </b>
+
+            <p id="sourceText"></p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
