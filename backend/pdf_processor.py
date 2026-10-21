@@ -1,145 +1,76 @@
-import io
-import fitz
-import pytesseract
+import logging
+import os
+import unicodedata
+from io import BytesIO
 
-from PIL import Image, ImageOps, ImageEnhance, ImageFilter
+from PyPDF2 import PdfReader
 
+log = logging.getLogger("medrag.pdf")
 
-TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
-
-
-def _prepare_image(image):
-    image = image.convert("RGB")
-
-    width, height = image.size
-    scale = 2
-
-    image = image.resize(
-        (width * scale, height * scale),
-        Image.Resampling.LANCZOS,
-    )
-
-    gray = ImageOps.grayscale(image)
-    gray = ImageEnhance.Contrast(gray).enhance(1.8)
-    gray = gray.filter(ImageFilter.SHARPEN)
-
-    return gray
+MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "300"))
 
 
-def _ocr_image(image):
-    prepared = _prepare_image(image)
+def process_pdf(pdf_content):
+    """
+    Extract text from PDF bytes.
 
-    config = "--oem 3 --psm 6"
+    Returns: [{"page": 1, "text": "..."}, {"page": 2, "text": "..."}]
+    Raises ValueError (safe to show to the client) for any bad input.
+    """
 
-    text = pytesseract.image_to_string(
-        prepared,
-        config=config,
-    ).strip()
+    if not isinstance(pdf_content, (bytes, bytearray)):
+        raise TypeError("process_pdf expects PDF file content as bytes.")
 
-    data = pytesseract.image_to_data(
-        prepared,
-        config=config,
-        output_type=pytesseract.Output.DICT,
-    )
+    if not pdf_content:
+        raise ValueError("The uploaded PDF is empty.")
 
-    confidences = []
+    if not pdf_content.startswith(b"%PDF-"):
+        raise ValueError("The uploaded file does not appear to be a valid PDF.")
 
-    for value in data["conf"]:
-        try:
-            value = float(value)
-            if value >= 0:
-                confidences.append(value)
-        except (ValueError, TypeError):
-            pass
+    try:
+        reader = PdfReader(BytesIO(pdf_content), strict=False)
 
-    confidence = (
-        round(sum(confidences) / len(confidences), 2)
-        if confidences
-        else 0
-    )
+        if reader.is_encrypted:
+            # decrypt("") returns 0 / NOT_DECRYPTED when a password is needed
+            # (it does NOT raise), so the return value must be checked.
+            try:
+                decrypted = reader.decrypt("")
+            except Exception as exc:
+                log.warning("PDF decrypt failed: %s", exc)
+                raise ValueError("Password-protected PDFs are not supported.") from exc
 
-    return text, confidence
+            if not decrypted:
+                raise ValueError("Password-protected PDFs are not supported.")
 
+        total_pages = len(reader.pages)
 
-def extract_text_from_image_bytes(file_content):
-    image = Image.open(io.BytesIO(file_content))
+        if total_pages == 0:
+            raise ValueError("The PDF has no pages.")
 
-    text, confidence = _ocr_image(image)
+        if total_pages > MAX_PDF_PAGES:
+            raise ValueError(f"The PDF has too many pages (limit {MAX_PDF_PAGES}).")
 
-    return {
-        "text": text,
-        "total_pages": 1,
-        "ocr_used": True,
-        "ocr_pages": [1],
-        "average_ocr_confidence": confidence,
-        "pages": [
-            {
-                "page": 1,
-                "text": text,
-                "ocr": True,
-                "confidence": confidence,
-            }
-        ],
-    }
+        extracted_pages = []
 
+        for page_number, page in enumerate(reader.pages, start=1):
+            text = page.extract_text() or ""
+            # NFC keeps Devanagari / Kannada combining characters consistent
+            text = unicodedata.normalize("NFC", text)
+            text = " ".join(text.split())
 
-def extract_text_from_pdf_bytes(file_content):
-    pdf = fitz.open(stream=file_content, filetype="pdf")
+            if text:
+                extracted_pages.append({"page": page_number, "text": text})
 
-    pages = []
-    ocr_pages = []
-    confidences = []
-
-    for page_number, page in enumerate(pdf, start=1):
-        native_text = page.get_text("text").strip()
-
-        # Scanned/handwritten pages normally have little or no native text.
-        if len(native_text) >= 30:
-            text = native_text
-            ocr = False
-            confidence = 100.0
-        else:
-            pix = page.get_pixmap(
-                matrix=fitz.Matrix(2.5, 2.5),
-                alpha=False,
+        if not extracted_pages:
+            raise ValueError(
+                "No selectable text was extracted from this PDF. "
+                "It may be scanned/image-only and require OCR."
             )
 
-            image = Image.open(
-                io.BytesIO(pix.tobytes("png"))
-            )
+        return extracted_pages
 
-            text, confidence = _ocr_image(image)
-            ocr = True
-            ocr_pages.append(page_number)
-            confidences.append(confidence)
-
-        pages.append({
-            "page": page_number,
-            "text": text,
-            "ocr": ocr,
-            "confidence": confidence,
-        })
-
-    pdf.close()
-
-    extracted_text = "\n\n".join(
-        page["text"]
-        for page in pages
-        if page["text"]
-    ).strip()
-
-    average_confidence = (
-        round(sum(confidences) / len(confidences), 2)
-        if confidences
-        else 0
-    )
-
-    return {
-        "text": extracted_text,
-        "total_pages": len(pages),
-        "ocr_used": bool(ocr_pages),
-        "ocr_pages": ocr_pages,
-        "average_ocr_confidence": average_confidence,
-        "pages": pages,
-    }
+    except ValueError:
+        raise
+    except Exception as exc:
+        log.warning("PDF read failed: %s", exc)
+        raise ValueError("The PDF is corrupted or could not be read.") from exc

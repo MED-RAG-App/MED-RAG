@@ -1,4 +1,10 @@
 .env
+*.env
+!.env.example
+venv/
+.venv/
 __pycache__/
 *.pyc
-venv/
+backend/uploads/
+tests/results/
+.DS_Store
