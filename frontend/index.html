@@ -7,8 +7,7 @@
 
     <title>MedRAG</title>
 
-    <link rel="icon" type="logo/png" href="logo.png">
-
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -62,7 +61,7 @@
 
                     <div class="upload-icon">☁</div>
 
-                    <strong>Upload PDF</strong>
+                    <strong>Upload PDF or Image</strong>
 
                     <p>or drag and drop</p>
 
@@ -70,7 +69,8 @@
 
                     <input
                         type="file"
-                        accept=".pdf"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        multiple
                         onchange="uploadPDF(this)"
                         hidden
                     >
@@ -90,9 +90,7 @@
             <!-- PROFILE -->
             <div class="profile">
 
-                <div class="avatar">
-                    U
-                </div>
+                <div class="avatar">U</div>
 
                 <div>
                     <strong>User</strong>
@@ -102,7 +100,6 @@
             </div>
 
         </aside>
-
 
         <!-- MAIN CONTENT -->
         <main class="main">
@@ -114,8 +111,8 @@
                     <h1>Chat with your Medical Documents</h1>
 
                     <p>
-                        Ask questions about your medical PDFs
-                        and get answers with trusted sources.
+                        Ask questions about your medical PDFs and images
+                        and get answers with source references.
                     </p>
                 </div>
 
@@ -124,8 +121,8 @@
                 </button>
 
             </header>
-            <!-- EMPTY NEW CHAT -->
 
+            <!-- EMPTY NEW CHAT -->
             <section class="empty-chat" id="emptyChat">
 
                 <div class="empty-icon">
@@ -135,23 +132,24 @@
                 <h2>Start a New Medical Chat</h2>
 
                 <p>
-                    Upload a medical PDF and ask questions
-                    based on its content.
+                    Upload medical PDFs or images and ask questions
+                    based on their content.
                 </p>
 
                 <label class="empty-upload">
 
                     <div>☁</div>
 
-                    <strong>Upload Medical PDF</strong>
+                    <strong>Upload Medical PDFs or Images</strong>
 
                     <span>
-                        PDF files up to 50MB
+                        PDF, PNG, JPG, JPEG and WEBP files up to 50MB
                     </span>
 
                     <input
                         type="file"
-                        accept=".pdf"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        multiple
                         onchange="startWithPDF(this)"
                         hidden
                     >
@@ -165,15 +163,14 @@
 
                 <div class="document-card">
 
-                    <div class="pdf-icon">
-                        PDF
+                    <div class="pdf-icon" id="documentFileIcon">
+                        FILE
                     </div>
 
                     <div>
-                        <h3>Diabetes_Guidelines.pdf</h3>
-
-                        <p>
-                            2.4 MB • 28 pages
+                        <h3>No document uploaded</h3>
+                        <p id="documentFileDetails">
+                            Upload a PDF or image
                         </p>
                     </div>
 
@@ -181,14 +178,14 @@
 
                 </div>
 
-
                 <label class="add-pdf">
 
-                    ＋ Add More PDFs
+                    ＋ Add More PDFs or Images
 
                     <input
                         type="file"
-                        accept=".pdf"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        multiple
                         onchange="uploadPDF(this)"
                         hidden
                     >
@@ -196,7 +193,6 @@
                 </label>
 
             </section>
-
 
             <!-- CHAT AREA -->
             <section class="chat-area" id="chatArea">
@@ -217,15 +213,19 @@
                     </div>
 
                     <p>
-                        Upload a medical PDF to see relevant
+                        Upload a medical PDF or image to see relevant
                         sources here.
                     </p>
 
+                    <img
+                        id="sourceImagePreview"
+                        alt="Uploaded medical image preview"
+                        style="display:none; max-width:100%; max-height:420px; object-fit:contain; margin:12px 0; border-radius:8px;"
+                    >
+
                 </div>
 
-
                 <!-- QUESTION BOX -->
-
                 <div class="input-area">
 
                     <textarea
@@ -253,24 +253,18 @@
 
                 </div>
 
-
                 <p class="disclaimer">
-
                     MedRAG can make mistakes.
                     Please verify important medical information.
-
                 </p>
 
             </section>
-    
 
         </main>
 
     </div>
 
-
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 
 </body>
-
 </html>
